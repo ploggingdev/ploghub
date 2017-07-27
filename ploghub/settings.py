@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'widget_tweaks',
+    'simple_history',
 ]
 
 MIDDLEWARE = [
@@ -137,3 +138,5 @@ POSTMARK = {
     'TOKEN': os.environ['ploghub_postmark_token'],
     'TEST_MODE': False,
 }
+
+ARTICLE_TAGS = ['a','p','blockquote', 'code', 'em', 'strong', 'li','ol','ul', 'h1','h2','h3','h4','h5','h6', 'pre']

@@ -12,6 +12,10 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
+from .forms import PostModelForm
+from .models import Post
+import markdown
+import bleach
 
 class IndexView(generic.View):
 
@@ -95,3 +99,27 @@ class ProfileView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Invalid form data")
             return redirect(reverse('ploghubapp:profile'))
+
+class WriteView(LoginRequiredMixin, View):
+    form_class  = PostModelForm
+    template_name = 'ploghubapp/write.html'
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {'form' : form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            body = form.cleaned_data['body']
+            body_html = markdown.markdown(body)
+            body_html = bleach.clean(body_html, tags=settings.ARTICLE_TAGS, strip=True)
+            article = Post(title=title, body=body, user=request.user, body_html=body_html)
+
+            article.save()
+            messages.success(request, 'Article has been submitted.')
+            return redirect(reverse('ploghubapp:home_page'))
+        else:
+            return render(request, self.template_name, {'form' : form})

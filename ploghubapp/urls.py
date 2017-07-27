@@ -41,4 +41,5 @@ urlpatterns = [
         r'^reset/done/$',
         auth_views.password_reset_complete, name="password_reset_complete"
     ),
+    url(r'^write/$', views.WriteView.as_view(), name='write'),
 ]
