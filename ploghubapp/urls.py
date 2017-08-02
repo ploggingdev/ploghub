@@ -42,4 +42,5 @@ urlpatterns = [
         auth_views.password_reset_complete, name="password_reset_complete"
     ),
     url(r'^write/$', views.WriteView.as_view(), name='write'),
+    url(r'^(?P<pk>[0-9]+)/(?P<username>.+)/(?P<slug>[a-zA-Z0-9_-]+)/$', views.ViewPost.as_view(), name='view_post'),
 ]

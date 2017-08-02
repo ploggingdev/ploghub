@@ -7,16 +7,58 @@
 {% block content %}
 
 <div class="container-fluid">
-    
-    <br />
-    <br />
 
     {% include "ploghubapp/errors_and_messages.html" %}
 
+    <br /> 
+
+    {% if post_list %}
+
     <div class="row">
-        Welcome to Plog Hub
+        <div class="col-md-6 col-md-offset-3 text-left">
+            <p class="text-left">
+                Sort by : 
+                {% if sort_by == "New" %}
+                    <a href="{% url 'ploghubapp:home_page' %}">Popular</a>
+                    &nbsp
+                    <span style="text-decoration:underline;"><a href="{% url 'ploghubapp:home_page' %}?sort_by=new">New</a></span>
+                {% else %}
+                    <span style="text-decoration:underline;"><a href="{% url 'ploghubapp:home_page' %}">Popular</a></span>
+                    &nbsp
+                    <a href="{% url 'ploghubapp:home_page' %}?sort_by=new">New</a>
+                {% endif %}
+            </p>
+            <ul class="list-group">
+
+                {% for post in post_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'ploghubapp:view_post' post.id post.user post.title|slugify %}">{{ post.title }}</a>
+                </li>
+                {% endfor %}
+
+            </ul>
         </div>
-    <br />
+    </div>
+
+    {% if post_list.paginator.num_pages > 0 %}
+
+    <nav aria-label="...">
+        <ul class="pager">
+            {% if post_list.has_previous %}
+            <li><a href="{{ request.path }}?page={{ post_list.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li>{{ post_list.number }} of {{ post_list.paginator.num_pages }}</li>
+            {% if post_list.has_next %}
+            <li><a href="{{ request.path }}?page={{ post_list.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+
+    {% endif %} {% else %}
+    <p>There are no posts currently</p>
+    {% endif %}
+
     <br />
 
 </div>

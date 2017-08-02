@@ -19,7 +19,7 @@ class ProfileForm(forms.Form):
 class AdminPostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title','body', 'body_html', 'user', 'deleted', 'upvotes', 'downvotes', 'net_votes']
+        fields = ['title','body', 'body_html', 'user', 'deleted', 'upvotes', 'downvotes', 'net_votes', 'rank']
         widgets = {
             'body': forms.Textarea(attrs={'rows': 10}),
         }

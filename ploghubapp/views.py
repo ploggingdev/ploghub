@@ -16,11 +16,34 @@ from .forms import PostModelForm
 from .models import Post
 import markdown
 import bleach
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-class IndexView(generic.View):
+class IndexView(generic.ListView):
+    model = Post
+    paginate_by = 10
+    template_name = 'ploghubapp/home_page.html'
 
     def get(self, request):
-        return render(request, "ploghubapp/home_page.html")
+        if request.GET.get('sort_by') == "new":
+            all_results = self.model.objects.filter(deleted=False).order_by('-created')
+            sort_by = "New"
+        else:
+            sort_by = "Popular"
+            all_results = self.model.objects.filter(deleted=False).order_by('-rank')
+
+        paginator = Paginator(all_results, self.paginate_by)
+
+        page = request.GET.get('page')
+        try:
+            post_list = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            post_list = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            post_list = paginator.page(paginator.num_pages)
+        return render(request, self.template_name, {'post_list' : post_list, 'sort_by' : sort_by})
+
 
 class LogoutView(LoginRequiredMixin, View):
 
@@ -123,3 +146,14 @@ class WriteView(LoginRequiredMixin, View):
             return redirect(reverse('ploghubapp:home_page'))
         else:
             return render(request, self.template_name, {'form' : form})
+
+class ViewPost(generic.DetailView):
+
+    template_name = 'ploghubapp/view_post.html'
+
+    def get(self, request, pk, username, slug):
+        post = get_object_or_404(post, pk=pk)
+        if post.deleted:
+            messages.error(request, 'The post you tried to access has been deleted.')
+            return redirect(reverse('ploghubapp:home_page', args=[name]))
+        return render(request, self.template_name, {'post' : post})
