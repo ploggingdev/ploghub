@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='home_page'),
     url(r'^register/$', views.RegisterView.as_view(), name='register'),
     url(r'^profile/$', views.ProfileView.as_view(), name='profile'),
+    url(r'^profile/(?P<username>[a-zA-Z0-9-_]+)/$', views.PublicUserProfileView.as_view(), name='public_user_profile'),
     url(
         r'^login/$',
         auth_views.login, { 'redirect_authenticated_user' : True}, name="login",

@@ -23,6 +23,10 @@
                         <label for="{{ form.email.id_for_label }}">Email address</label>
                         {{ form.email |attr:"placeholder:Email" |add_class:"form-control" }} 
                     </div>
+                    <div class="form-group">
+                        <label for="{{ form.about.id_for_label }}">About</label>
+                        {{ form.about |attr:"placeholder:About" |add_class:"form-control" }} 
+                    </div>
                 <button class="btn btn-primary" type="submit">Update</button>
                 <input type="hidden" name="next" value="{{ next }}" />
             </form>

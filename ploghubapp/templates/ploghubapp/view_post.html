@@ -17,7 +17,7 @@
             </p>
             </br>
             <p>
-                <em>By {{ post.user }} on {{ post.created |date:'N j, Y' }}</em>
+                <em>By <a href="{% url 'ploghubapp:public_user_profile' post.user %}">{{ post.user }}</a> on {{ post.created |date:'N j, Y' }}</em>
             </p>
             <p>
                 {{ post.body_html|safe }}

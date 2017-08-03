@@ -95,14 +95,14 @@ class ProfileView(LoginRequiredMixin, View):
     template_name = 'registration/profile.html'
 
     def get(self, request, *args, **kwargs):
-        data = {}
+        data = {'about' : request.user.userprofile.about}
         if request.user.email != '':
             data['email'] = request.user.email
         form = self.form_class(initial = data)
         return render(request, self.template_name, {'form' : form})
     
     def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST, initial={'email' : request.user.email})
+        form = self.form_class(request.POST, initial={'email' : request.user.email, 'about' : request.user.userprofile.about})
         if form.is_valid():
             if form.has_changed():
                 user = request.user
@@ -114,6 +114,8 @@ class ProfileView(LoginRequiredMixin, View):
                             return redirect(reverse('ploghubapp:profile'))
                     setattr(user, field, form.cleaned_data[field])
                 user.save()
+                user.userprofile.about = form.cleaned_data['about']
+                user.userprofile.save()
                 messages.success(request, "Profile has been updated")
                 return redirect(reverse('ploghubapp:profile'))
             else:
@@ -122,6 +124,13 @@ class ProfileView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Invalid form data")
             return redirect(reverse('ploghubapp:profile'))
+
+class PublicUserProfileView(View):
+    template_name = 'registration/public_user_profile.html'
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username)
+        return render(request, self.template_name, {'user' : user})
 
 class WriteView(LoginRequiredMixin, View):
     form_class  = PostModelForm

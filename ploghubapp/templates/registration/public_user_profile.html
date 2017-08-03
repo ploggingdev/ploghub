@@ -1,0 +1,24 @@
+{% extends "registration/base.html" %}
+
+{% load widget_tweaks %}
+
+{% block title %}{{ user.username }} - Profile{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    
+    {% include "ploghubapp/errors_and_messages.html" %}
+
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-left">
+            <p><strong>Username : </strong>{{ user.username }}</p> 
+            <p><strong>About : </strong></p>
+            <p>{{ user.userprofile.about }}</p>
+            
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

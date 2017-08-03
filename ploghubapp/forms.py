@@ -4,7 +4,7 @@ import bleach
 import markdown
 from django.utils.html import escape
 import re
-from .models import Post
+from .models import Post, UserProfile
 from django.forms import ModelForm
 from django.conf import settings
 
@@ -15,6 +15,7 @@ class RegisterForm(forms.Form):
 
 class ProfileForm(forms.Form):
     email = forms.EmailField()
+    about = forms.CharField(max_length=1000, widget=forms.Textarea)
 
 class AdminPostForm(forms.ModelForm):
     class Meta:
@@ -40,4 +41,12 @@ class PostModelForm(ModelForm):
         fields = ['title', 'body']
         widgets = {
             'body': forms.Textarea(attrs={'rows': 10}),
+        }
+
+class AdminUserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['user', 'about']
+        widgets = {
+            'about': forms.Textarea(attrs={'rows': 10}),
         }

@@ -38,3 +38,10 @@ class Post(models.Model):
         rank = (self.net_votes - 1)/pow(hours+2,1.5)
         self.rank = rank
         self.save()
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    about = models.CharField(max_length=1000)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
