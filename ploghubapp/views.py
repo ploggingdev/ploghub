@@ -152,7 +152,7 @@ class ViewPost(generic.DetailView):
     template_name = 'ploghubapp/view_post.html'
 
     def get(self, request, pk, username, slug):
-        post = get_object_or_404(post, pk=pk)
+        post = get_object_or_404(Post, pk=pk)
         if post.deleted:
             messages.error(request, 'The post you tried to access has been deleted.')
             return redirect(reverse('ploghubapp:home_page', args=[name]))
