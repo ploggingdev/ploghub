@@ -14,7 +14,7 @@ class Post(models.Model):
 
     #Fields
     title = models.CharField(max_length=150)
-    body = models.CharField(max_length=1000)
+    body = models.CharField(max_length=20000)
     body_html = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     deleted = models.BooleanField(default=False)
