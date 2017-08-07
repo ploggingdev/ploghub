@@ -12,8 +12,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
-from .forms import PostModelForm
-from .models import Post
+from .forms import PostModelForm, CommentForm
+from .models import Post, Comment
 import markdown
 import bleach
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -159,10 +159,41 @@ class WriteView(LoginRequiredMixin, View):
 class ViewPost(generic.DetailView):
 
     template_name = 'ploghubapp/view_post.html'
+    form_class = CommentForm
 
     def get(self, request, pk, username, slug):
         post = get_object_or_404(Post, pk=pk)
         if post.deleted:
             messages.error(request, 'The post you tried to access has been deleted.')
             return redirect(reverse('ploghubapp:home_page', args=[name]))
-        return render(request, self.template_name, {'post' : post})
+        nodes = Comment.objects.filter(post=post)
+        form = self.form_class()
+        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form})
+
+    def post(self, request, pk, username, slug):
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            post = get_object_or_404(Post, pk=pk)
+            if post.deleted:
+                messages.error(request, 'The post that you tried to access has been deleted.')
+                return redirect(reverse('ploghubapp:view_post', args=[pk, username, slug]))
+            comment_text = form.cleaned_data['comment']
+            comment_text_html = markdown.markdown(comment_text)
+            comment_text_html = bleach.clean(comment_text_html, tags=settings.COMMENT_TAGS, strip=True)
+            
+            comment = Comment(comment_text=comment_text, comment_text_html=comment_text_html, user=request.user, post=post)
+
+            comment.save()
+            messages.success(request, 'Comment has been submitted.')
+            return redirect(reverse('ploghubapp:view_post', args=[pk, username, slug]))
+        else:
+            post = get_object_or_404(Post, pk=pk)
+            if post.deleted:
+                messages.error(request, 'The post that you tried to access has been deleted.')
+                return redirect(reverse('ploghubapp:view_post', args=[pk, username, slug]))
+            nodes = Comment.objects.filter(post=post)
+            form = self.form_class()
+            return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form})

@@ -24,6 +24,30 @@
             </p>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 text-left">
+            <p>
+                {% if nodes %}
+                    <h3>Comments</h3>
+                {% else %}
+                    <h3>No comments yet, be the first to comment on this post!</h3>
+                {% endif %}
+            </p>
+            <form action="" method="post">
+                {% csrf_token %}
+                <p>
+                <label for="{{ form.comment.id_for_label }}">Add Comment</label> 
+                {{ form.comment |add_class:"form-control" |add_class:"focus_state" |attr:"rows:5" }}
+                </p>
+                <input class="btn btn-primary" type="submit" value="Add comment" id="id_submit" />
+            </form>
+
+            {% if nodes %}
+                </br>
+                {% include "ploghubapp/comment.html" %}
+            {% endif %}
+        </div>
+    </div>
 
    <br />
    <br />

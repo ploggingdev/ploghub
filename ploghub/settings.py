@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'simple_history',
     'celery',
     'django_celery_beat',
+    'mptt',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,5 @@ POSTMARK = {
 }
 
 ARTICLE_TAGS = ['a','p','blockquote', 'code', 'em', 'strong', 'li','ol','ul', 'h1','h2','h3','h4','h5','h6', 'pre']
+
+COMMENT_TAGS = ['a','p','blockquote', 'code', 'em', 'strong', 'li','ol','ul', 'pre']

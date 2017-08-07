@@ -1,0 +1,25 @@
+{% load mptt_tags %}
+<ul class="media-list">
+    {% recursetree nodes %}
+        <li class="media">
+            <div class="media-left">
+                <div>
+                    <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+                </div>
+                <div>
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                </div>
+            </div>
+            <div class="media-body">
+                <em>By <a href="{% url 'ploghubapp:public_user_profile' node.user %}">{{ node.user }}</a> {{ node.time_since_posted }}</em>
+                {{ node.comment_text_html|safe }}
+
+                {% if not node.is_leaf_node %}
+                <ul class="media-list children">
+                    {{ children }}
+                </ul>
+            {% endif %}
+            </div>
+        </li>
+    {% endrecursetree %}
+</ul>

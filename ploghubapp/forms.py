@@ -4,7 +4,7 @@ import bleach
 import markdown
 from django.utils.html import escape
 import re
-from .models import Post, UserProfile
+from .models import Post, UserProfile, Comment
 from django.forms import ModelForm
 from django.conf import settings
 
@@ -35,6 +35,24 @@ class AdminPostForm(forms.ModelForm):
 
         return self.cleaned_data
 
+class AdminCommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['comment_text', 'comment_text_html', 'post', 'parent', 'user', 'deleted', 'upvotes', 'downvotes', 'net_votes']
+
+    def clean(self):
+        if self.cleaned_data['parent']:
+            if self.cleaned_data['parent'].post != self.cleaned_data['post']:
+                raise forms.ValidationError("The parent comment chosen does not belong to the selected post.")
+        comment_text = self.cleaned_data['comment_text']
+
+        comment_text_html = markdown.markdown(comment_text)
+        comment_text_html = bleach.clean(comment_text_html, tags=settings.COMMENT_TAGS, strip=True)
+
+        self.cleaned_data['comment_text_html'] = comment_text_html
+
+        return self.cleaned_data
+
 class PostModelForm(ModelForm):
     class Meta:
         model = Post
@@ -50,3 +68,6 @@ class AdminUserProfileForm(forms.ModelForm):
         widgets = {
             'about': forms.Textarea(attrs={'rows': 10}),
         }
+
+class CommentForm(forms.Form):
+    comment = forms.CharField(label='Comment', max_length=2000, widget=forms.Textarea)
