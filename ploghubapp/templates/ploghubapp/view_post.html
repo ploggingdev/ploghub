@@ -37,7 +37,7 @@
                 {% csrf_token %}
                 <p>
                 <label for="{{ form.comment.id_for_label }}">Add Comment</label> 
-                {{ form.comment |add_class:"form-control" |add_class:"focus_state" |attr:"rows:5" }}
+                {{ form.comment |add_class:"form-control" |attr:"rows:5" }}
                 </p>
                 <input class="btn btn-primary" type="submit" value="Add comment" id="id_submit" />
             </form>
