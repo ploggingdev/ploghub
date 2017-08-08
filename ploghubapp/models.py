@@ -90,3 +90,31 @@ class Comment(MPTTModel):
             return "{} day ago".format(days)
         else:
             return "{} days ago".format(days)
+    
+    def can_delete(self):
+        if self.deleted:
+            return False
+        now = timezone.now()
+        timediff = now - self.created
+        minutes = int(timediff.total_seconds()/60)
+        hours = int(minutes/60)
+        if hours <= 1 and Comment.objects.filter(parent=self).filter(deleted=False).count() == 0:
+            return True
+        else:
+            return False
+    
+    def can_edit(self):
+        if self.deleted:
+            return False
+        now = timezone.now()
+        timediff = now - self.created
+        minutes = int(timediff.total_seconds()/60)
+        hours = int(minutes/60)
+        if hours <= 1:
+            return True
+        else:
+            return False
+    
+    def get_post_url(self):
+        slug = slugify(self.post.title)
+        return reverse('ploghubapp:view_post', args=[self.post.id, self.post.user, slug])

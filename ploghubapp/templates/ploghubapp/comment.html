@@ -12,7 +12,25 @@
             </div>
             <div class="media-body">
                 <em>By <a href="{% url 'ploghubapp:public_user_profile' node.user %}">{{ node.user }}</a> {{ node.time_since_posted }}</em>
+                </br>
+                </br>
                 {{ node.comment_text_html|safe }}
+
+                <div>
+                    <ul class="list-inline">
+                        <li><a href="{% url 'ploghubapp:reply_to_comment' node.id %}">reply</a></li>
+
+                        {% if node.can_edit and node.user == request.user %}
+                            <li><a href="{% url 'ploghubapp:edit_comment' node.id %}">edit</a></li>
+                        {% endif %}
+
+                        {% if node.can_delete and node.user == request.user %}
+                            <li><a href="{% url 'ploghubapp:delete_comment' node.id %}">delete</a></li>
+                        {% endif %}
+
+                    </ul>
+                    </br>
+                </div>
 
                 {% if not node.is_leaf_node %}
                 <ul class="media-list children">

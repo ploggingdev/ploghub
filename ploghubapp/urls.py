@@ -44,4 +44,7 @@ urlpatterns = [
     ),
     url(r'^write/$', views.WriteView.as_view(), name='write'),
     url(r'^post/(?P<pk>[0-9]+)/(?P<username>.+)/(?P<slug>[a-zA-Z0-9_-]+)/$', views.ViewPost.as_view(), name='view_post'),
+    url(r'^comment/(?P<pk>[0-9]+)/reply/$', views.ReplyCommentView.as_view(), name='reply_to_comment'),
+    url(r'^comment/(?P<pk>[0-9]+)/edit/$', views.EditCommentView.as_view(), name='edit_comment'),
+    url(r'^comment/(?P<pk>[0-9]+)/delete/$', views.DeleteCommentView.as_view(), name='delete_comment'),
 ]

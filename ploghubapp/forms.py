@@ -71,3 +71,13 @@ class AdminUserProfileForm(forms.ModelForm):
 
 class CommentForm(forms.Form):
     comment = forms.CharField(label='Comment', max_length=2000, widget=forms.Textarea)
+
+class CommentReplyForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['comment_text']
+
+class CommentEditForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['comment_text']

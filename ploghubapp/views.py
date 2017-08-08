@@ -12,7 +12,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
-from .forms import PostModelForm, CommentForm
+from .forms import PostModelForm, CommentForm, CommentEditForm, CommentReplyForm
 from .models import Post, Comment
 import markdown
 import bleach
@@ -166,7 +166,7 @@ class ViewPost(generic.DetailView):
         if post.deleted:
             messages.error(request, 'The post you tried to access has been deleted.')
             return redirect(reverse('ploghubapp:home_page', args=[name]))
-        nodes = Comment.objects.filter(post=post)
+        nodes = Comment.objects.filter(post=post).filter(deleted=False)
         form = self.form_class()
         return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes)})
 
@@ -197,3 +197,117 @@ class ViewPost(generic.DetailView):
             nodes = Comment.objects.filter(post=post)
             form = self.form_class()
             return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form})
+
+class ReplyCommentView(LoginRequiredMixin, generic.View):
+    
+    template_name = 'ploghubapp/comment_reply.html'
+    form_class = CommentReplyForm
+
+    def get(self, request, pk):
+        form = self.form_class()
+        comment = get_object_or_404(Comment, pk=pk)
+        redirect_url = comment.get_post_url()
+        if comment.deleted:
+            messages.error(request, 'You cannot reply to the comment.')
+            return redirect(redirect_url)
+        return render(request, self.template_name, {'comment' : comment, 'form' : form, 'redirect_url' : redirect_url})
+    
+    def post(self, request, pk):
+        form = self.form_class(request.POST)
+        
+        if form.is_valid():
+            comment_parent = get_object_or_404(Comment, pk=pk)
+            comment_text = form.cleaned_data['comment_text']
+
+            redirect_url = comment_parent.get_post_url()
+            if comment_parent.deleted:
+                messages.error(request, 'You cannot reply to the comment.')
+                return redirect(redirect_url)
+
+            comment_text_html = markdown.markdown(comment_text)
+            comment_text_html = bleach.clean(comment_text_html, tags=settings.COMMENT_TAGS, strip=True)
+            comment = Comment(comment_text=comment_text, comment_text_html=comment_text_html ,parent=comment_parent, user=request.user, post=comment_parent.post)
+
+            comment.save()
+            messages.success(request, 'Comment has been submitted.')
+            return redirect(redirect_url)
+        else:
+            comment = get_object_or_404(Comment, pk=pk)
+            redirect_url = comment.get_top_level_url()
+            if comment.deleted:
+                messages.error(request, 'You cannot reply to the comment.')
+                return redirect(redirect_url)
+            return render(request, self.template_name, {'comment' : comment, 'form' : form, 'redirect_url' : redirect_url})
+
+class EditCommentView(LoginRequiredMixin, generic.View):
+    
+    template_name = 'ploghubapp/comment_edit.html'
+    form_class = CommentEditForm
+
+    def get(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        redirect_url = comment.get_post_url()
+        if (not comment.can_edit()) or (comment.user != request.user):
+            messages.error(request, 'Invalid request, please try again.')
+            return redirect(redirect_url)
+        
+        form = self.form_class(initial={'comment_text' : comment.comment_text})
+        return render(request, self.template_name, {'comment' : comment, 'form' : form, 'redirect_url' : redirect_url})
+    
+    def post(self, request, pk):
+        form = self.form_class(request.POST)
+        
+        if form.is_valid():
+            comment = get_object_or_404(Comment, pk=pk)
+            redirect_url = comment.get_post_url()
+            if (not comment.can_edit()) or (comment.user != request.user):
+                messages.error(request, 'Invalid request, please try again.')
+                return redirect(redirect_url)
+
+            comment_text = form.cleaned_data['comment_text']
+            
+            comment_text_html = markdown.markdown(comment_text)
+            comment_text_html = bleach.clean(comment_text_html, tags=settings.COMMENT_TAGS, strip=True)
+            comment.comment_text = comment_text
+            comment.comment_text_html = comment_text_html
+
+            comment.save()
+            messages.success(request, 'Comment has been updated.')
+            
+            return redirect(redirect_url)
+        else:
+            comment = get_object_or_404(Comment, pk=pk)
+            redirect_url = comment.get_post_url()
+            if (not comment.can_edit()) or (comment.user != request.user):
+                messages.error(request, 'Invalid request, please try again.')
+                return redirect(redirect_url)
+            
+            return render(request, self.template_name, {'comment' : comment, 'form' : form, 'redirect_url' : redirect_url})
+
+class DeleteCommentView(LoginRequiredMixin, generic.View):
+    
+    template_name = 'ploghubapp/comment_delete.html'
+
+    def get(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        go_back_url = comment.get_post_url()
+        if (not comment.can_delete()) or (comment.user != request.user):
+            messages.error(request, 'Invalid request, please try again.')
+            return redirect(go_back_url)
+        
+        return render(request, self.template_name, {'comment' : comment, 'go_back_url' : go_back_url})
+    
+    def post(self, request, pk):
+        
+        if request.POST.get('delete_comment'):
+            comment = get_object_or_404(Comment, pk=pk)
+            redirect_url = comment.get_post_url()
+            if comment.can_delete() and comment.user == request.user:
+                comment.deleted = True
+                comment.save()
+                messages.success(request, 'Comment has been deleted.')
+            else:
+                messages.error(request, 'Comment could not be deleted.')
+            return redirect(redirect_url)
+        else:
+            return redirect(reverse('ploghubapp:home_page'))

@@ -1,0 +1,45 @@
+{% extends "registration/base.html" %} 
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}Reply to comment{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+   {% include "ploghubapp/errors_and_messages.html" %}
+
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-left">
+            <h4>Original comment :</h4>
+            </br>
+            <p>
+                <em>By <a href="{% url 'ploghubapp:public_user_profile' comment.user %}">{{ comment.user }}</a> {{ comment.time_since_posted }}</em>
+                {{ comment.comment_text_html|safe }}
+            </p>
+            <h4>Type your reply below :</h4>
+            <br />
+            <form method="post" action="">
+                {% csrf_token %}
+                <p>
+                {{ form.comment_text |add_class:"form-control" |add_class:"focus_state" |attr:"rows:7" |attr:"placeholder:Type your reply here" }}
+                </p>
+                <button class="btn btn-primary" type="submit">Submit</button> 
+                <a href="{{ redirect_url }}" class="btn btn-default">Go back</a>
+                <input type="hidden" name="next" value="{{ next }}" />
+            </form>
+        </div>
+    </div>
+    <br />
+
+    <br />
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+<script src="{% static "global/js/tab_textarea.js" %}"></script>
+
+{% endblock %}
