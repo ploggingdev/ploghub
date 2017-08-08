@@ -28,7 +28,11 @@
         <div class="col-md-6 col-md-offset-3 text-left">
             <p>
                 {% if nodes %}
-                    <h3>Comments</h3>
+                    {% if comments_count == 1 %}
+                        <h3>1 comment</h3>
+                    {% else %}
+                        <h3>{{ comments_count }} comments</h3>
+                    {% endif %}
                 {% else %}
                     <h3>No comments yet, be the first to comment on this post!</h3>
                 {% endif %}

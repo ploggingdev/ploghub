@@ -168,7 +168,7 @@ class ViewPost(generic.DetailView):
             return redirect(reverse('ploghubapp:home_page', args=[name]))
         nodes = Comment.objects.filter(post=post)
         form = self.form_class()
-        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form})
+        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes)})
 
     def post(self, request, pk, username, slug):
         if not request.user.is_authenticated:
