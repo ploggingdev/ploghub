@@ -40,6 +40,31 @@ class Post(models.Model):
         self.rank = rank
         self.save()
 
+    def time_since_posted(self):
+        now = timezone.now()
+        timediff = now - self.created
+        minutes = int(timediff.total_seconds()/60)
+        hours = int(minutes/60)
+        days = int(hours/24)
+        if minutes < 60:
+            if minutes == 1:
+                return "{} minute ago".format(minutes)
+            else:    
+                return "{} minutes ago".format(minutes)
+        if hours < 24:
+            if hours == 1:
+                return "{} hour ago".format(hours)
+            else:
+                return "{} hours ago".format(hours)
+        if days == 1:
+            return "{} day ago".format(days)
+        else:
+            return "{} days ago".format(days)
+    
+    def get_post_url(self):
+        slug = slugify(self.title)
+        return reverse('ploghubapp:view_post', args=[self.id, self.user, slug])
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     about = models.CharField(max_length=1000)

@@ -1,0 +1,65 @@
+{% extends "registration/base.html" %} 
+
+{% block title %}My Posts - Page {{ posts.number }}{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <br />
+    {% include "ploghubapp/errors_and_messages.html" %}
+
+    <h3>My Posts</h3>
+
+    <br /> 
+    {% if posts %}
+
+
+    <div class="row text-left">
+        <div class="col-md-6 col-md-offset-3">
+            <ul class="list-group">
+
+                {% for post in posts %}
+                <li class="list-group-item">
+                    {% if post.comment_text_html %}
+
+                    <em>Comment posted {{ post.time_since_posted }} in <a href="{{ post.get_post_url }}">{{ post.post.title }}</a>: </em>
+                    <p>
+                    {{ post.comment_text_html|safe }}
+                    </p>
+
+                    {% else %}
+
+                    <em><a href="{{ post.get_post_url }}">{{ post.title }}</a> posted {{ post.time_since_posted }}</em>
+
+                    {% endif %}
+                </li>
+                {% endfor %}
+
+            </ul>
+        </div>
+    </div>
+
+    {% if posts.paginator.num_pages > 0 %}
+
+    <nav aria-label="...">
+        <ul class="pager">
+            {% if posts.has_previous %}
+            <li><a href="{{ request.path }}?page={{ posts.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li>{{ posts.number }} of {{ posts.paginator.num_pages }}</li>
+            {% if posts.has_next %}
+            <li><a href="{{ request.path }}?page={{ posts.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+
+    {% endif %} {% else %}
+    <p>You did not post anything yet.</p>
+    {% endif %}
+
+    <br />
+
+</div>
+
+{% endblock %}

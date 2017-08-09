@@ -17,6 +17,8 @@ from .models import Post, Comment
 import markdown
 import bleach
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from itertools import chain
+from operator import attrgetter
 
 class IndexView(generic.ListView):
     model = Post
@@ -311,3 +313,32 @@ class DeleteCommentView(LoginRequiredMixin, generic.View):
             return redirect(redirect_url)
         else:
             return redirect(reverse('ploghubapp:home_page'))
+
+class MyPosts(LoginRequiredMixin, generic.View):
+    
+    template_name = 'ploghubapp/myposts.html'
+    paginate_by = 10
+
+    def get(self, request):
+        user = request.user
+        comments = Comment.objects.all().filter(deleted=False).filter(user=user).order_by('-created')
+        posts = Post.objects.all().filter(deleted=False).filter(user=user).order_by('-created')
+
+        total_count = Comment.objects.all().filter(deleted=False).filter(user=user).count() + Post.objects.all().filter(deleted=False).filter(user=user).count()
+
+        all_items = chain(comments, posts)
+        all_items = sorted(all_items, key=attrgetter('created'), reverse=True)
+
+        paginator = Paginator(all_items, self.paginate_by)
+
+        page = request.GET.get('page')
+        try:
+            posts = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            posts = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            posts = paginator.page(paginator.num_pages)
+
+        return render(request, self.template_name, {'posts': posts})

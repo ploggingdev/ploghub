@@ -42,6 +42,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     {% if user.is_authenticated %}
                         <li><a href="{% url 'ploghubapp:write' %}">Write</a></li>
+                        <li><a href="{% url 'ploghubapp:my_posts' %}">My posts</a></li>
                         <li><a href="{% url 'ploghubapp:profile' %}">Profile</a></li>
                         <li><a href="{% url 'ploghubapp:logout' %}">Logout</a></li>
                     {% else %}
