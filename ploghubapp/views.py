@@ -196,6 +196,13 @@ class ViewPost(generic.DetailView):
             comment = Comment(comment_text=comment_text, comment_text_html=comment_text_html, user=request.user, post=post)
 
             comment.save()
+            vote_obj = VoteComment(user=request.user,
+                                comment=comment,
+                                value=1)
+            vote_obj.save()
+            comment.upvotes = F('upvotes') + 1
+            comment.net_votes = F('net_votes') + 1
+            comment.save()
             messages.success(request, 'Comment has been submitted.')
             return redirect(reverse('ploghubapp:view_post', args=[pk, username, slug]))
         else:
@@ -237,6 +244,13 @@ class ReplyCommentView(LoginRequiredMixin, generic.View):
             comment_text_html = bleach.clean(comment_text_html, tags=settings.COMMENT_TAGS, strip=True)
             comment = Comment(comment_text=comment_text, comment_text_html=comment_text_html ,parent=comment_parent, user=request.user, post=comment_parent.post)
 
+            comment.save()
+            vote_obj = VoteComment(user=request.user,
+                                comment=comment,
+                                value=1)
+            vote_obj.save()
+            comment.upvotes = F('upvotes') + 1
+            comment.net_votes = F('net_votes') + 1
             comment.save()
             messages.success(request, 'Comment has been submitted.')
             return redirect(redirect_url)

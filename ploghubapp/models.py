@@ -88,7 +88,7 @@ class Comment(MPTTModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     upvotes = models.IntegerField(default=0)
     downvotes = models.IntegerField(default=0)
-    net_votes = models.IntegerField(default=1)
+    net_votes = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
