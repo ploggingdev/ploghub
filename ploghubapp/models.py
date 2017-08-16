@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.text import slugify
 from mptt.models import MPTTModel, TreeForeignKey
+from django.db.models import F
 
 class Post(models.Model):
     """
@@ -68,6 +69,8 @@ class Post(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     about = models.CharField(max_length=1000)
+    comment_karma = models.IntegerField(default=0)
+    submission_karma = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
@@ -143,3 +146,62 @@ class Comment(MPTTModel):
     def get_post_url(self):
         slug = slugify(self.post.title)
         return reverse('ploghubapp:view_post', args=[self.post.id, self.post.user, slug])
+
+class VoteComment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    value = models.IntegerField(default=0)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    def change_vote(self, new_vote_value):
+        if self.value == -1 and new_vote_value == 1:  # down to up
+            vote_diff = 2
+            self.comment.net_votes = F('net_votes') + 2
+            self.comment.upvotes = F('upvotes') + 1
+            self.comment.downvotes = F('downvotes') - 1
+        elif self.value == 1 and new_vote_value == -1:  # up to down
+            vote_diff = -2
+            self.comment.net_votes = F('net_votes') - 2
+            self.comment.upvotes = F('upvotes') - 1
+            self.comment.downvotes = F('downvotes') + 1
+        elif self.value == 0 and new_vote_value == 1:
+            vote_diff = 1
+            self.comment.upvotes = F('upvotes') + 1
+            self.comment.net_votes = F('net_votes') + 1
+        elif self.value == 0 and new_vote_value == -1:
+            vote_diff = -1
+            self.comment.downvotes = F('downvotes') + 1
+            self.comment.net_votes = F('net_votes') - 1
+        else:
+            return None
+
+        self.comment.user.comment_karma =  F('comment_karma') + vote_diff
+
+        self.value = new_vote_value
+        self.comment.save()
+        self.comment.user.save()
+        self.save()
+
+        return vote_diff
+
+    def unvote(self):
+        if self.value == 1:
+            vote_diff = -1
+            self.comment.upvotes = F('upvotes') - 1
+            self.comment.net_votes = F('net_votes') - 1
+        elif self.value == -1:
+            vote_diff = 1
+            self.comment.downvotes = F('downvotes') - 1
+            self.comment.net_votes = F('net_votes') + 1
+        else:
+            return None
+
+        self.comment.user.comment_karma = F('comment_karma') + vote_diff
+
+        self.value = 0
+        self.save()
+        self.comment.save()
+        self.comment.user.save()
+        return vote_diff

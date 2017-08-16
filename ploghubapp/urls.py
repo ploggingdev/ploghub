@@ -48,4 +48,5 @@ urlpatterns = [
     url(r'^comment/(?P<pk>[0-9]+)/edit/$', views.EditCommentView.as_view(), name='edit_comment'),
     url(r'^comment/(?P<pk>[0-9]+)/delete/$', views.DeleteCommentView.as_view(), name='delete_comment'),
     url(r'^myposts/$', views.MyPosts.as_view(), name='my_posts'),
+    url(r'^votecomment/(?P<pk>[0-9]+)/$', views.VoteCommentView.as_view(), name='vote_comment'),
 ]

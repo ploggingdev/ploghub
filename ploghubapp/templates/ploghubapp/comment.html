@@ -1,17 +1,28 @@
 {% load mptt_tags %}
+{% load comment_vote_status %}
 <ul class="media-list">
     {% recursetree nodes %}
         <li class="media">
             <div class="media-left">
+                {% with vote_value=user_votes|get_vote_value:node.id %}
                 <div>
-                    <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+                    <span id="{{ node.id }}-up" class="glyphicon glyphicon-chevron-up" 
+                    {% if vote_value == 1  %}
+                    style="color : orangered" 
+                    {% endif %}
+                    aria-hidden="true" onclick="handle_vote({{ node.id }},'up')"></span>
                 </div>
                 <div>
-                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    <span id="{{ node.id }}-down" class="glyphicon glyphicon-chevron-down" 
+                    {% if vote_value == -1  %}
+                    style="color : orangered" 
+                    {% endif %}
+                    aria-hidden="true" onclick="handle_vote({{ node.id }},'down')"></span>
                 </div>
+                {% endwith %}
             </div>
             <div class="media-body">
-                <em>By <a href="{% url 'ploghubapp:public_user_profile' node.user %}">{{ node.user }}</a> {{ node.time_since_posted }}</em>
+                <em><a href="{% url 'ploghubapp:public_user_profile' node.user %}">{{ node.user }}</a> <span id="{{ node.id }}-points">{{ node.net_votes }}</span> <span id="{{ node.id }}-points-suffix">{{ node.net_votes|get_points }}</span> posted {{ node.time_since_posted }}</em>
                 </br>
                 </br>
                 {{ node.comment_text_html|safe }}

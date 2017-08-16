@@ -13,12 +13,15 @@ from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
 from .forms import PostModelForm, CommentForm, CommentEditForm, CommentReplyForm
-from .models import Post, Comment
+from .models import Post, Comment, VoteComment
 import markdown
 import bleach
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from itertools import chain
 from operator import attrgetter
+from django.http import JsonResponse
+from django.db.models import F
+from django.core.exceptions import ObjectDoesNotExist
 
 class IndexView(generic.ListView):
     model = Post
@@ -169,8 +172,12 @@ class ViewPost(generic.DetailView):
             messages.error(request, 'The post you tried to access has been deleted.')
             return redirect(reverse('ploghubapp:home_page', args=[name]))
         nodes = Comment.objects.filter(post=post).filter(deleted=False)
+        if request.user.is_authenticated:
+            user_votes = VoteComment.objects.filter(user=request.user).filter(comment__post=post)
+        else:
+            user_votes = list()
         form = self.form_class()
-        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes)})
+        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes), 'user_votes' : user_votes})
 
     def post(self, request, pk, username, slug):
         if not request.user.is_authenticated:
@@ -342,3 +349,61 @@ class MyPosts(LoginRequiredMixin, generic.View):
             posts = paginator.page(paginator.num_pages)
 
         return render(request, self.template_name, {'posts': posts})
+
+class VoteCommentView(LoginRequiredMixin, generic.View):
+
+    def post(self, request, pk):
+        if request.POST.get('vote_value'):
+            try:
+                comment = Comment.objects.filter(deleted=False).get(pk=pk)
+            except Comment.DoesNotExist:
+                return HttpResponseBadRequest()
+
+            vote_value = request.POST.get('vote_value', None)
+
+            try:
+                vote_value = int(vote_value)
+                if vote_value not in [-1, 1]:
+                    raise ValueError("Invalid request")
+
+            except (ValueError, TypeError):
+                return HttpResponseBadRequest()
+
+            try:
+                vote_obj = VoteComment.objects.get(comment=comment,user=request.user)
+
+            except ObjectDoesNotExist:
+                vote_obj = VoteComment(user=request.user,
+                                comment=comment,
+                                value=vote_value)
+                vote_obj.save()
+                if vote_value == 1:
+                    vote_diff = 1
+                    comment.upvotes = F('upvotes') + 1
+                    comment.net_votes = F('net_votes') + 1
+                elif vote_value == -1:
+                    vote_diff = -1
+                    comment.downvotes = F('downvotes') + 1
+                    comment.net_votes = F('net_votes') - 1
+                comment.save()
+                
+                return JsonResponse({'error'   : None,
+                                    'vote_diff': vote_diff})
+            
+            if vote_obj.value == vote_value:
+                # cancel vote
+                vote_diff = vote_obj.unvote()
+                if not vote_diff:
+                    return HttpResponseBadRequest(
+                        'Something went wrong while canceling the vote')
+            else:
+                # change vote
+                vote_diff = vote_obj.change_vote(vote_value)
+                if not vote_diff:
+                    return HttpResponseBadRequest(
+                        'Wrong values for old/new vote combination')
+            
+            return JsonResponse({'error'   : None,
+                         'vote_diff': vote_diff})
+        else:
+            return JsonResponse({'error' : 'Something went wrong'})
