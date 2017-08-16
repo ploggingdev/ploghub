@@ -1,7 +1,7 @@
 function handle_vote(id, type){
 
     if((type != 'up' && type != 'down') || !Number.isInteger(id)){
-        alert("error");
+        alert("Oops, an error was encountered.");
         return;
     }
 
@@ -79,7 +79,7 @@ function handle_vote(id, type){
      // Code to run if the request fails; the raw request and
      // status codes are passed to the function
      .fail(function( xhr, status, errorThrown ) {
-       alert( "Sorry, there was a problem with registering your vote" + errorThrown );
+       alert( "Sorry, there was a problem registering your vote. Please login, if have not done so." );
      });
 }
 

@@ -406,4 +406,4 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
             return JsonResponse({'error'   : None,
                          'vote_diff': vote_diff})
         else:
-            return JsonResponse({'error' : 'Something went wrong'})
+            return HttpResponseBadRequest()
