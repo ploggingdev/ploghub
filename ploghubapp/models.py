@@ -93,7 +93,7 @@ class Comment(MPTTModel):
     updated = models.DateTimeField(auto_now=True)
 
     class MPTTMeta:
-        order_insertion_by = ['net_votes']
+        order_insertion_by = ['-net_votes']
     
     def __str__(self):
         return self.comment_text

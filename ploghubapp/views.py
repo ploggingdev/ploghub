@@ -22,6 +22,7 @@ from operator import attrgetter
 from django.http import JsonResponse
 from django.db.models import F
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 
 class IndexView(generic.ListView):
     model = Post
@@ -400,7 +401,8 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
                     comment.downvotes = F('downvotes') + 1
                     comment.net_votes = F('net_votes') - 1
                 comment.save()
-                
+                with transaction.atomic():
+                    Comment.objects.rebuild()
                 return JsonResponse({'error'   : None,
                                     'vote_diff': vote_diff})
             
@@ -416,7 +418,8 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
                 if not vote_diff:
                     return HttpResponseBadRequest(
                         'Wrong values for old/new vote combination')
-            
+            with transaction.atomic():
+                Comment.objects.rebuild()
             return JsonResponse({'error'   : None,
                          'vote_diff': vote_diff})
         else:
