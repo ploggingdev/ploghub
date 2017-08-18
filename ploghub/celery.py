@@ -19,6 +19,7 @@ app.autodiscover_tasks()
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, update_rank.s(), name="Update rank", expires=10)
+    sender.add_periodic_task(60.0, rebuild_tree.s(), name="Rebuild comment tree", expires=10)
 
 @app.task
 def update_rank():
@@ -26,3 +27,10 @@ def update_rank():
     posts = Post.objects.filter(deleted=False)
     for post in posts:
         post.calculate_rank()
+
+@app.task
+def rebuild_tree():
+    from ploghubapp.models import Comment
+    from django.db import transaction
+    with transaction.atomic():
+        Comment.objects.rebuild()
