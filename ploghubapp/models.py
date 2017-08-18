@@ -68,7 +68,7 @@ class Post(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    about = models.CharField(max_length=1000)
+    about = models.CharField(max_length=1000, default="[empty]")
     comment_karma = models.IntegerField(default=0)
     submission_karma = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
@@ -155,7 +155,7 @@ class VoteComment(models.Model):
     updated = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
 
-    def change_vote(self, new_vote_value):
+    def change_vote(self, new_vote_value, request_user):
         if self.value == -1 and new_vote_value == 1:  # down to up
             vote_diff = 2
             self.comment.net_votes = F('net_votes') + 2
@@ -177,16 +177,18 @@ class VoteComment(models.Model):
         else:
             return None
 
-        self.comment.user.comment_karma =  F('comment_karma') + vote_diff
+        if self.comment.user != request_user:
+            self.comment.user.userprofile.comment_karma +=  vote_diff
+            self.comment.user.userprofile.save()
 
         self.value = new_vote_value
+        self.save()
         self.comment.save()
         self.comment.user.save()
-        self.save()
 
         return vote_diff
 
-    def unvote(self):
+    def unvote(self, request_user):
         if self.value == 1:
             vote_diff = -1
             self.comment.upvotes = F('upvotes') - 1
@@ -197,8 +199,9 @@ class VoteComment(models.Model):
             self.comment.net_votes = F('net_votes') + 1
         else:
             return None
-
-        self.comment.user.comment_karma = F('comment_karma') + vote_diff
+        if self.comment.user != request_user:
+            self.comment.user.userprofile.comment_karma += vote_diff
+            self.comment.user.userprofile.save()
 
         self.value = 0
         self.save()

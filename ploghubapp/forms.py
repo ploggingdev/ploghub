@@ -64,7 +64,7 @@ class PostModelForm(ModelForm):
 class AdminUserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ['user', 'about']
+        fields = ['user', 'about', 'comment_karma', 'submission_karma']
         widgets = {
             'about': forms.Textarea(attrs={'rows': 10}),
         }

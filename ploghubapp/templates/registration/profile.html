@@ -16,6 +16,8 @@
                 <label for="id_username">Username</label>
                 <input type="text" value="{{ request.user.username }}" id="id_username" class="form-control" disabled/> 
             </div>
+            <p><strong>Comment karma : {{ request.user.userprofile.comment_karma }}</strong></p>
+            <p><strong>Submission karma : {{ request.user.userprofile.submission_karma }}</strong></p>
             <form method="post" class="form" action="{% url 'ploghubapp:profile' %}">
             {% csrf_token %}
 

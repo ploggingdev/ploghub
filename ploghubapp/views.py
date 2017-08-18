@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
 from .forms import PostModelForm, CommentForm, CommentEditForm, CommentReplyForm
-from .models import Post, Comment, VoteComment
+from .models import Post, Comment, VoteComment, UserProfile
 import markdown
 import bleach
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -89,6 +89,8 @@ class RegisterView(View):
 
             user = get_user_model().objects.create_user(username=new_username, password=new_password, email=new_email)
             user = authenticate(username=new_username, password=new_password)
+            userprofile = UserProfile(user=user)
+            userprofile.save()
             if user is not None:
                 login(request, user)
                 return redirect(reverse('ploghubapp:profile'))
@@ -401,6 +403,11 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
                     comment.downvotes = F('downvotes') + 1
                     comment.net_votes = F('net_votes') - 1
                 comment.save()
+
+                if comment.user != request.user:
+                    comment.user.userprofile.comment_karma +=  vote_diff
+                    comment.user.userprofile.save()
+
                 with transaction.atomic():
                     Comment.objects.rebuild()
                 return JsonResponse({'error'   : None,
@@ -408,13 +415,13 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
             
             if vote_obj.value == vote_value:
                 # cancel vote
-                vote_diff = vote_obj.unvote()
+                vote_diff = vote_obj.unvote(request.user)
                 if not vote_diff:
                     return HttpResponseBadRequest(
                         'Something went wrong while canceling the vote')
             else:
                 # change vote
-                vote_diff = vote_obj.change_vote(vote_value)
+                vote_diff = vote_obj.change_vote(vote_value, request.user)
                 if not vote_diff:
                     return HttpResponseBadRequest(
                         'Wrong values for old/new vote combination')
