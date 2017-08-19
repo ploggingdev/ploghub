@@ -58,7 +58,7 @@ class PostModelForm(ModelForm):
         model = Post
         fields = ['title', 'body']
         widgets = {
-            'body': forms.Textarea(attrs={'rows': 10}),
+            'body': forms.Textarea(attrs={'rows': 15}),
         }
 
 class AdminUserProfileForm(forms.ModelForm):
