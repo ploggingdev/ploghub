@@ -172,7 +172,7 @@ class WriteView(LoginRequiredMixin, View):
             article.net_votes += 1
             article.save()
             messages.success(request, 'Article has been submitted.')
-            return redirect(reverse('ploghubapp:home_page'))
+            return redirect(reverse('ploghubapp:home_page') + '?sort_by=new')
         else:
             return render(request, self.template_name, {'form' : form})
 
