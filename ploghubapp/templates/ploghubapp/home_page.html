@@ -1,7 +1,7 @@
 {% extends "registration/base.html" %} 
 
 {% load static %}
-
+{% load comment_vote_status %}
 {% block title %}Plog Hub{% endblock %}
 
 {% block content %}
@@ -32,7 +32,36 @@
 
                 {% for post in post_list %}
                 <li class="list-group-item">
-                    <a href="{% url 'ploghubapp:view_post' post.id post.user post.title|slugify %}">{{ post.title }}</a>
+                    <div class="media">
+                        <div class="media-left text-center">
+                            {% with vote_value=user_votes|get_post_vote_value:post.id %}
+                            <div>
+                                <span id="{{ post.id }}-post-up" class="glyphicon glyphicon-chevron-up" 
+                                {% if vote_value == 1  %}
+                                style="color : orangered" 
+                                {% endif %}
+                                aria-hidden="true" onclick="handle_post_vote({{ post.id }},'up')"></span>
+                            </div>
+                            <div>
+                            <span id="{{ post.id }}-post-points">{{ post.net_votes }}</span>
+                            </div>
+                            <div>
+                                <span id="{{ post.id }}-post-down" class="glyphicon glyphicon-chevron-down" 
+                                {% if vote_value == -1  %}
+                                style="color : orangered" 
+                                {% endif %}
+                                aria-hidden="true" onclick="handle_post_vote({{ post.id }},'down')"></span>
+                            </div>
+                            {% endwith %}
+                        </div>
+                        <div class="media-body">
+                            <a href="{% url 'ploghubapp:view_post' post.id post.user post.title|slugify %}">{{ post.title }}</a>
+                        </br>
+                            <em>posted {{ post.time_since_posted }} by <a href="{% url 'ploghubapp:public_user_profile' post.user %}">{{ post.user }}</a></em>
+                    </br>
+                        {{ post.comments_count }} {{ post.comments_count|get_comments }}
+                        </div>
+                    </div>
                 </li>
                 {% endfor %}
 
@@ -62,5 +91,11 @@
     <br />
 
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+<script src="{% static "global/js/post_vote.js" %}"></script>
 
 {% endblock %}

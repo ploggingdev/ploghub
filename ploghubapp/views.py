@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
 from .forms import PostModelForm, CommentForm, CommentEditForm, CommentReplyForm
-from .models import Post, Comment, VoteComment, UserProfile
+from .models import Post, Comment, VoteComment, UserProfile, VotePost
 import markdown
 import bleach
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -22,6 +22,7 @@ from operator import attrgetter
 from django.http import JsonResponse
 from django.db.models import F
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count
 
 class IndexView(generic.ListView):
     model = Post
@@ -30,11 +31,11 @@ class IndexView(generic.ListView):
 
     def get(self, request):
         if request.GET.get('sort_by') == "new":
-            all_results = self.model.objects.filter(deleted=False).order_by('-created')
+            all_results = self.model.objects.filter(deleted=False).order_by('-created').annotate(comments_count=Count('comment'))
             sort_by = "New"
         else:
             sort_by = "Popular"
-            all_results = self.model.objects.filter(deleted=False).order_by('-rank')
+            all_results = self.model.objects.filter(deleted=False).order_by('-rank').annotate(comments_count=Count('comment'))
 
         paginator = Paginator(all_results, self.paginate_by)
 
@@ -47,7 +48,13 @@ class IndexView(generic.ListView):
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
             post_list = paginator.page(paginator.num_pages)
-        return render(request, self.template_name, {'post_list' : post_list, 'sort_by' : sort_by})
+        
+        if request.user.is_authenticated:
+            user_votes = VotePost.objects.filter(user=request.user)
+        else:
+            user_votes = list()
+
+        return render(request, self.template_name, {'post_list' : post_list, 'sort_by' : sort_by, 'user_votes' : user_votes })
 
 
 class LogoutView(LoginRequiredMixin, View):
@@ -157,6 +164,13 @@ class WriteView(LoginRequiredMixin, View):
             body_html = bleach.clean(body_html, tags=settings.ARTICLE_TAGS, strip=True)
             article = Post(title=title, body=body, user=request.user, body_html=body_html)
 
+            article.save()
+            vote_obj = VotePost(user=request.user,
+                                post=article,
+                                value=1)
+            vote_obj.save()
+            article.upvotes += 1
+            article.net_votes += 1
             article.save()
             messages.success(request, 'Article has been submitted.')
             return redirect(reverse('ploghubapp:home_page'))
@@ -406,6 +420,68 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
                 if comment.user != request.user:
                     comment.user.userprofile.comment_karma +=  vote_diff
                     comment.user.userprofile.save()
+
+                return JsonResponse({'error'   : None,
+                                    'vote_diff': vote_diff})
+            
+            if vote_obj.value == vote_value:
+                # cancel vote
+                vote_diff = vote_obj.unvote(request.user)
+                if not vote_diff:
+                    return HttpResponseBadRequest(
+                        'Something went wrong while canceling the vote')
+            else:
+                # change vote
+                vote_diff = vote_obj.change_vote(vote_value, request.user)
+                if not vote_diff:
+                    return HttpResponseBadRequest(
+                        'Wrong values for old/new vote combination')
+            
+            return JsonResponse({'error'   : None,
+                         'vote_diff': vote_diff})
+        else:
+            return HttpResponseBadRequest()
+
+class VotePostView(LoginRequiredMixin, generic.View):
+
+    def post(self, request, pk):
+        if request.POST.get('vote_value'):
+            try:
+                post = Post.objects.filter(deleted=False).get(pk=pk)
+            except Post.DoesNotExist:
+                return HttpResponseBadRequest()
+
+            vote_value = request.POST.get('vote_value', None)
+
+            try:
+                vote_value = int(vote_value)
+                if vote_value not in [-1, 1]:
+                    raise ValueError("Invalid request")
+
+            except (ValueError, TypeError):
+                return HttpResponseBadRequest()
+
+            try:
+                vote_obj = VotePost.objects.get(post=post,user=request.user)
+
+            except ObjectDoesNotExist:
+                vote_obj = VotePost(user=request.user,
+                                post=post,
+                                value=vote_value)
+                vote_obj.save()
+                if vote_value == 1:
+                    vote_diff = 1
+                    post.upvotes += 1
+                    post.net_votes +=  1
+                elif vote_value == -1:
+                    vote_diff = -1
+                    post.downvotes += 1
+                    post.net_votes -= 1
+                post.save()
+
+                if post.user != request.user:
+                    post.user.userprofile.submission_karma +=  vote_diff
+                    post.user.userprofile.save()
 
                 return JsonResponse({'error'   : None,
                                     'vote_diff': vote_diff})

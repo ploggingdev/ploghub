@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, UserProfile, Comment, VoteComment
+from .models import Post, UserProfile, Comment, VoteComment, VotePost
 from simple_history.admin import SimpleHistoryAdmin
 from .forms import AdminPostForm, AdminUserProfileForm, AdminCommentForm
 from mptt.admin import MPTTModelAdmin
@@ -21,4 +21,8 @@ class CommentAdmin(MPTTModelAdmin):
 
 @admin.register(VoteComment)
 class VoteCommentAdmin(SimpleHistoryAdmin):
+    list_display = ('user', 'value' ,'created')
+
+@admin.register(VotePost)
+class VotePostAdmin(SimpleHistoryAdmin):
     list_display = ('user', 'value' ,'created')
