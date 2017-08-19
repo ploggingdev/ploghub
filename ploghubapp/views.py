@@ -20,7 +20,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from itertools import chain
 from operator import attrgetter
 from django.http import JsonResponse
-from django.db.models import F
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
 
@@ -190,10 +189,14 @@ class ViewPost(generic.DetailView):
         nodes = Comment.objects.filter(post=post).filter(deleted=False)
         if request.user.is_authenticated:
             user_votes = VoteComment.objects.filter(user=request.user).filter(comment__post=post)
+            try:
+                post_vote_value = VotePost.objects.get(post=post, user=request.user).value
+            except ObjectDoesNotExist:
+                post_vote = None
         else:
             user_votes = list()
         form = self.form_class()
-        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes), 'user_votes' : user_votes})
+        return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes), 'user_votes' : user_votes ,'post_vote_value' : post_vote_value })
 
     def post(self, request, pk, username, slug):
         if not request.user.is_authenticated:
@@ -216,8 +219,8 @@ class ViewPost(generic.DetailView):
                                 comment=comment,
                                 value=1)
             vote_obj.save()
-            comment.upvotes = F('upvotes') + 1
-            comment.net_votes = F('net_votes') + 1
+            comment.upvotes += 1
+            comment.net_votes += 1
             comment.save()
             messages.success(request, 'Comment has been submitted.')
             return redirect(reverse('ploghubapp:view_post', args=[pk, username, slug]))
@@ -265,8 +268,8 @@ class ReplyCommentView(LoginRequiredMixin, generic.View):
                                 comment=comment,
                                 value=1)
             vote_obj.save()
-            comment.upvotes = F('upvotes') + 1
-            comment.net_votes = F('net_votes') + 1
+            comment.upvotes += 1
+            comment.net_votes += 1
             comment.save()
             messages.success(request, 'Comment has been submitted.')
             return redirect(redirect_url)
@@ -409,12 +412,12 @@ class VoteCommentView(LoginRequiredMixin, generic.View):
                 vote_obj.save()
                 if vote_value == 1:
                     vote_diff = 1
-                    comment.upvotes = F('upvotes') + 1
-                    comment.net_votes = F('net_votes') + 1
+                    comment.upvotes += 1
+                    comment.net_votes += 1
                 elif vote_value == -1:
                     vote_diff = -1
-                    comment.downvotes = F('downvotes') + 1
-                    comment.net_votes = F('net_votes') - 1
+                    comment.downvotes += 1
+                    comment.net_votes -= 1
                 comment.save()
 
                 if comment.user != request.user:

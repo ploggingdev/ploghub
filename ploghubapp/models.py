@@ -7,7 +7,6 @@ from django.utils import timezone
 from django.urls import reverse
 from django.utils.text import slugify
 from mptt.models import MPTTModel, TreeForeignKey
-from django.db.models import F
 
 class Post(models.Model):
     """
@@ -158,22 +157,22 @@ class VoteComment(models.Model):
     def change_vote(self, new_vote_value, request_user):
         if self.value == -1 and new_vote_value == 1:  # down to up
             vote_diff = 2
-            self.comment.net_votes = F('net_votes') + 2
-            self.comment.upvotes = F('upvotes') + 1
-            self.comment.downvotes = F('downvotes') - 1
+            self.comment.net_votes += 2
+            self.comment.upvotes += 1
+            self.comment.downvotes -= 1
         elif self.value == 1 and new_vote_value == -1:  # up to down
             vote_diff = -2
-            self.comment.net_votes = F('net_votes') - 2
-            self.comment.upvotes = F('upvotes') - 1
-            self.comment.downvotes = F('downvotes') + 1
+            self.comment.net_votes -= 2
+            self.comment.upvotes -= 1
+            self.comment.downvotes += 1
         elif self.value == 0 and new_vote_value == 1:
             vote_diff = 1
-            self.comment.upvotes = F('upvotes') + 1
-            self.comment.net_votes = F('net_votes') + 1
+            self.comment.upvotes += 1
+            self.comment.net_votes += 1
         elif self.value == 0 and new_vote_value == -1:
             vote_diff = -1
-            self.comment.downvotes = F('downvotes') + 1
-            self.comment.net_votes = F('net_votes') - 1
+            self.comment.downvotes += 1
+            self.comment.net_votes -= 1
         else:
             return None
 
@@ -191,12 +190,12 @@ class VoteComment(models.Model):
     def unvote(self, request_user):
         if self.value == 1:
             vote_diff = -1
-            self.comment.upvotes = F('upvotes') - 1
-            self.comment.net_votes = F('net_votes') - 1
+            self.comment.upvotes -= 1
+            self.comment.net_votes -= 1
         elif self.value == -1:
             vote_diff = 1
-            self.comment.downvotes = F('downvotes') - 1
-            self.comment.net_votes = F('net_votes') + 1
+            self.comment.downvotes -= 1
+            self.comment.net_votes += 1
         else:
             return None
         if self.comment.user != request_user:
@@ -220,22 +219,22 @@ class VotePost(models.Model):
     def change_vote(self, new_vote_value, request_user):
         if self.value == -1 and new_vote_value == 1:  # down to up
             vote_diff = 2
-            self.post.net_votes = F('net_votes') + 2
-            self.post.upvotes = F('upvotes') + 1
-            self.post.downvotes = F('downvotes') - 1
+            self.post.net_votes += 2
+            self.post.upvotes += 1
+            self.post.downvotes -= 1
         elif self.value == 1 and new_vote_value == -1:  # up to down
             vote_diff = -2
-            self.post.net_votes = F('net_votes') - 2
-            self.post.upvotes = F('upvotes') - 1
-            self.post.downvotes = F('downvotes') + 1
+            self.post.net_votes -= 2
+            self.post.upvotes -= 1
+            self.post.downvotes += 1
         elif self.value == 0 and new_vote_value == 1:
             vote_diff = 1
-            self.post.upvotes = F('upvotes') + 1
-            self.post.net_votes = F('net_votes') + 1
+            self.post.upvotes += 1
+            self.post.net_votes += 1
         elif self.value == 0 and new_vote_value == -1:
             vote_diff = -1
-            self.post.downvotes = F('downvotes') + 1
-            self.post.net_votes = F('net_votes') - 1
+            self.post.downvotes += 1
+            self.post.net_votes -= 1
         else:
             return None
 
@@ -253,12 +252,12 @@ class VotePost(models.Model):
     def unvote(self, request_user):
         if self.value == 1:
             vote_diff = -1
-            self.post.upvotes = F('upvotes') - 1
-            self.post.net_votes = F('net_votes') - 1
+            self.post.upvotes -= 1
+            self.post.net_votes -= 1
         elif self.value == -1:
             vote_diff = 1
-            self.post.downvotes = F('downvotes') - 1
-            self.post.net_votes = F('net_votes') + 1
+            self.post.downvotes -= 1
+            self.post.net_votes += 1
         else:
             return None
         if self.post.user != request_user:

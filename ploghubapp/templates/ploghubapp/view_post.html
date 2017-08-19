@@ -13,7 +13,30 @@
     <div class="row">
         <div class="col-md-6 col-md-offset-3 text-left">
             <p>
-            <h3>{{ post.title }}</h3>
+                    <div class="media">
+                            <div class="media-left text-center">
+                                <div>
+                                    <span id="{{ post.id }}-post-up" class="glyphicon glyphicon-chevron-up" 
+                                    {% if post_vote_value == 1  %}
+                                    style="color : orangered" 
+                                    {% endif %}
+                                    aria-hidden="true" onclick="handle_post_vote({{ post.id }},'up')"></span>
+                                </div>
+                                <div>
+                                <span id="{{ post.id }}-post-points">{{ post.net_votes }}</span>
+                                </div>
+                                <div>
+                                    <span id="{{ post.id }}-post-down" class="glyphicon glyphicon-chevron-down" 
+                                    {% if post_vote_value == -1  %}
+                                    style="color : orangered" 
+                                    {% endif %}
+                                    aria-hidden="true" onclick="handle_post_vote({{ post.id }},'down')"></span>
+                                </div>
+                            </div>
+                            <div class="media-body media-middle">
+                                <a href="{% url 'ploghubapp:view_post' post.id post.user post.title|slugify %}">{{ post.title }}</a>
+                            </div>
+                        </div>
             </p>
             </br>
             <p>
@@ -64,5 +87,6 @@
 
 <script src="{% static "global/js/tab_textarea.js" %}"></script>
 <script src="{% static "global/js/comment_vote.js" %}"></script>
+<script src="{% static "global/js/post_vote.js" %}"></script>
 
 {% endblock %}
