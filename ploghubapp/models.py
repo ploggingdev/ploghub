@@ -69,7 +69,19 @@ class Post(models.Model):
     def get_post_url(self):
         slug = slugify(self.title)
         return reverse('ploghubapp:view_post', args=[self.id, self.user, slug])
-
+    
+    def can_delete(self):
+        if self.deleted:
+            return False
+        now = timezone.now()
+        timediff = now - self.created
+        minutes = int(timediff.total_seconds()/60)
+        hours = int(minutes/60)
+        if hours <= 23 and Comment.objects.filter(post=self).filter(deleted=False).count() == 0:
+            return True
+        else:
+            return False
+    
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     about = models.CharField(max_length=1000, default="[empty]")

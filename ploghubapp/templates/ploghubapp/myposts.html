@@ -13,7 +13,6 @@
     <br /> 
     {% if posts %}
 
-
     <div class="row text-left">
         <div class="col-md-6 col-md-offset-3">
             <ul class="list-group">
@@ -30,6 +29,14 @@
                     {% else %}
 
                     <em><a href="{{ post.get_post_url }}">{{ post.title }}</a> posted {{ post.time_since_posted }}</em>
+                    <ul class="list-inline">
+                        <li><a href="{% url 'ploghubapp:edit_post' post.id %}">edit</a></li>
+
+                        {% if post.can_delete and post.user == request.user %}
+                            <li><a href="{% url 'ploghubapp:delete_post' post.id %}">delete</a></li>
+                        {% endif %}
+
+                    </ul>
 
                     {% endif %}
                 </li>

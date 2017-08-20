@@ -81,3 +81,11 @@ class CommentEditForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['comment_text']
+
+class PostEditForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ['title', 'body']
+        widgets = {
+            'body': forms.Textarea(attrs={'rows': 15}),
+        }

@@ -1,0 +1,33 @@
+{% extends "registration/base.html" %} 
+{% load widget_tweaks %}
+
+{% block title %}Delete post?{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+   {% include "ploghubapp/errors_and_messages.html" %}
+
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-left">
+            <em>Are you sure you want to delete the following post? :</em>
+        </br></br>
+            <p> 
+                <strong>{{ post.title }}</strong>
+            </p>
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="delete_post" value="yes">
+                <button class="btn btn-danger" type="submit">Delete</button> 
+                <a href="{{ go_back_url }}" class="btn btn-default">Go back</a>
+                <input type="hidden" name="next" value="{{ next }}" />
+            </form>
+        </div>
+    </div>
+    <br />
+
+    <br />
+
+</div>
+
+{% endblock %}

@@ -12,7 +12,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core import exceptions
 from django.views import generic
-from .forms import PostModelForm, CommentForm, CommentEditForm, CommentReplyForm
+from .forms import PostModelForm, CommentForm, CommentEditForm, CommentReplyForm, PostEditForm
 from .models import Post, Comment, VoteComment, UserProfile, VotePost
 import markdown
 import bleach
@@ -185,7 +185,7 @@ class ViewPost(generic.DetailView):
         post = get_object_or_404(Post, pk=pk)
         if post.deleted:
             messages.error(request, 'The post you tried to access has been deleted.')
-            return redirect(reverse('ploghubapp:home_page', args=[name]))
+            return redirect(reverse('ploghubapp:home_page'))
         nodes = Comment.objects.filter(post=post).filter(deleted=False)
         if request.user.is_authenticated:
             user_votes = VoteComment.objects.filter(user=request.user).filter(comment__post=post)
@@ -506,3 +506,75 @@ class VotePostView(LoginRequiredMixin, generic.View):
                          'vote_diff': vote_diff})
         else:
             return HttpResponseBadRequest()
+
+class EditPostView(LoginRequiredMixin, generic.View):
+    
+    template_name = 'ploghubapp/post_edit.html'
+    form_class = PostEditForm
+
+    def get(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        redirect_url = post.get_post_url()
+        if post.user != request.user or post.deleted:
+            messages.error(request, 'Invalid request, please try again.')
+            return redirect(redirect_url)
+        
+        form = self.form_class(initial={'title' : post.title, 'body' : post.body})
+        return render(request, self.template_name, {'post' : post, 'form' : form, 'redirect_url' : redirect_url})
+    
+    def post(self, request, pk):
+        form = self.form_class(request.POST)
+        
+        if form.is_valid():
+            post = get_object_or_404(Post, pk=pk)
+            redirect_url = post.get_post_url()
+            if post.user != request.user or post.deleted:
+                messages.error(request, 'Invalid request, please try again.')
+                return redirect(redirect_url)
+            title = form.cleaned_data['title']
+            body = form.cleaned_data['body']
+            body_html = markdown.markdown(body)
+            body_html = bleach.clean(body_html, tags=settings.ARTICLE_TAGS, strip=True)
+            
+            post.title = title
+            post.body = body
+            post.body_html = body_html
+            post.save()
+            messages.success(request, 'Article has been updated.')
+            return redirect(redirect_url)
+        else:
+            post = get_object_or_404(Post, pk=pk)
+            redirect_url = post.get_post_url()
+            if post.user != request.user or post.deleted:
+                messages.error(request, 'Invalid request, please try again.')
+                return redirect(redirect_url)
+            
+            return render(request, self.template_name, {'post' : post, 'form' : form, 'redirect_url' : redirect_url})
+
+class DeletePostView(LoginRequiredMixin, generic.View):
+    
+    template_name = 'ploghubapp/post_delete.html'
+
+    def get(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        go_back_url = post.get_post_url()
+        if (not post.can_delete()) or (post.user != request.user):
+            messages.error(request, 'Invalid request, please try again.')
+            return redirect(go_back_url)
+        
+        return render(request, self.template_name, {'post' : post, 'go_back_url' : go_back_url})
+    
+    def post(self, request, pk):
+        
+        if request.POST.get('delete_post'):
+            post = get_object_or_404(Post, pk=pk)
+            if post.can_delete() and post.user == request.user:
+                post.deleted = True
+                post.save()
+                messages.success(request, 'Post has been deleted.')
+            else:
+                messages.error(request, 'Post could not be deleted.')
+            return redirect(reverse('ploghubapp:home_page'))
+        else:
+            messages.error(request, 'Invalid request')
+            return redirect(reverse('ploghubapp:home_page'))

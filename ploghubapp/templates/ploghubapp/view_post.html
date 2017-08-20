@@ -41,6 +41,14 @@
             </br>
             <p>
                 <em>By <a href="{% url 'ploghubapp:public_user_profile' post.user %}">{{ post.user }}</a> on {{ post.created |date:'N j, Y' }}</em>
+                <ul class="list-inline">
+                    <li><a href="{% url 'ploghubapp:edit_post' post.id %}">edit</a></li>
+
+                    {% if post.can_delete and post.user == request.user %}
+                        <li><a href="{% url 'ploghubapp:delete_post' post.id %}">delete</a></li>
+                    {% endif %}
+
+                </ul>
             </p>
             <p>
                 {{ post.body_html|safe }}
