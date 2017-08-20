@@ -192,7 +192,7 @@ class ViewPost(generic.DetailView):
             try:
                 post_vote_value = VotePost.objects.get(post=post, user=request.user).value
             except ObjectDoesNotExist:
-                post_vote = None
+                post_vote_value = None
         else:
             user_votes = list()
         form = self.form_class()

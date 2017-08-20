@@ -23,10 +23,11 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @app.task
 def update_rank():
-    from ploghubapp.models import Post
-    posts = Post.objects.filter(deleted=False)
+    from ploghubapp.models import Post, Comment
+    from django.db.models import Count
+    posts = Post.objects.filter(deleted=False).annotate(comments_count=Count('comment'))
     for post in posts:
-        post.calculate_rank()
+        post.calculate_rank(post.comments_count)
 
 @app.task
 def rebuild_tree():

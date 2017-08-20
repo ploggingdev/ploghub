@@ -31,12 +31,17 @@ class Post(models.Model):
 
         return self.title
 
-    def calculate_rank(self):
+    def calculate_rank(self, comments_count):
         now = timezone.now()
         timediff = now - self.created
         minutes = int(timediff.total_seconds()/60)
         hours = int(minutes/60)
-        rank = (self.net_votes - 1)/pow(hours+2,1.5)
+
+        comment_weight = 0.2
+        gravity = 1.5
+        amplifier = 100000
+
+        rank = (self.net_votes +(comments_count*comment_weight) - 1)/pow(hours+2,gravity)*amplifier
         self.rank = rank
         self.save()
 
