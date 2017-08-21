@@ -578,3 +578,9 @@ class DeletePostView(LoginRequiredMixin, generic.View):
         else:
             messages.error(request, 'Invalid request')
             return redirect(reverse('ploghubapp:home_page'))
+
+class AboutView(generic.View):
+    template_name = 'ploghubapp/about.html'
+
+    def get(self, request):
+        return render(request, self.template_name)

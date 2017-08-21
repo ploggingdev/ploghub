@@ -1,0 +1,66 @@
+{% extends "registration/base.html" %} 
+
+{% block title %}About{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    
+    {% include "ploghubapp/errors_and_messages.html" %}
+
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 text-left">
+            <br />
+            <ul class="list-group">
+                <li class="list-group-item">
+            <div class="text-center"><h3>About</h3></div>
+            <p>
+            Plog Hub is a blogging platform for developers. If you're looking for an analogy : Medium for developers.
+            <br /><br />
+            Here's a quick overview of the features of Plog Hub:
+            <ul>
+                <li>
+                    Write programming related blogs using a subset of markdown.
+                </li>
+                <li>
+                    Comment on blogs posts by other users.
+                </li>
+                <li>
+                    The front page helps you discover trending blog posts.
+                </li>
+            </ul>
+            </p>
+            <h3>What are the edit and delete policies on comments and blog posts?</h3>
+            <p>
+            <ul>
+                    <li>Comments can be edited for 2 hours from the time of being posted provided there are no replies to the comment.</li>
+                    <li>Comments can be deleted within 2 hours from the time of being posted provided there are no replies to the comment.</li>
+                    <li>Blog posts can be edited anytime as there is no time limit.</li>
+                    <li>Blog posts can be deleted within 24 hours of being posted provided there are no comments on the post.</li>
+                    <li>If you want a comment or blog post to be altered beyond the mentioned time limits, please send an email explaining your case, the moderators will review your case.</li>
+                </ul>
+            </p>
+            <h3>Which markdown tags are supported?</h3>
+        <p>
+            <ul>
+                <li>
+                        Supported in the comments : ['a','p','blockquote', 'code', 'em', 'strong', 'li','ol','ul', 'pre']
+                </li>
+                <li>
+                        Supported in blog posts = ['a','p','blockquote', 'code', 'em', 'strong', 'li','ol','ul', 'h1','h2','h3','h4','h5','h6', 'pre']
+                </li>
+            </ul>
+        </br>
+            If you are new to markdown, refer to this <a href="https://daringfireball.net/projects/markdown/syntax">guide</a>.
+        </p>
+            <p>Contact : ploggingdev@gmail.com</p>
+            </li>
+            </ul>
+        </div>
+    </div>
+    <br />
+    <br />
+
+</div>
+
+{% endblock %}

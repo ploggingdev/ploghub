@@ -52,4 +52,5 @@ urlpatterns = [
     url(r'^votepost/(?P<pk>[0-9]+)/$', views.VotePostView.as_view(), name='vote_post'),
     url(r'^post/(?P<pk>[0-9]+)/edit/$', views.EditPostView.as_view(), name='edit_post'),
     url(r'^post/(?P<pk>[0-9]+)/delete/$', views.DeletePostView.as_view(), name='delete_post'),
+    url(r'^about/$', views.AboutView.as_view(), name='about'),
 ]

@@ -21,6 +21,24 @@
     <![endif]-->
 
     <meta name="theme-color" content="#ffffff">
+    <style>
+        html {
+        position: relative;
+        min-height: 100%;
+        }
+        body {
+        /* Margin bottom by footer height */
+        margin-bottom: 60px;
+        }
+        .footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        /* Set the fixed height of the footer here */
+        height: 60px;
+        background-color: #f5f5f5;
+        }
+    </style>
 </head>
 
 <body class="text-center">
@@ -58,6 +76,24 @@
     </nav>
 
     {% block content %}{% endblock %}
+
+    <nav class="navbar navbar-default navbar-static-top footer" style="padding-top:20px; padding-bottom:20px;margin-bottom:0;">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-xs-6 col-md-2 col-md-offset-4">
+                    <a href="{% url 'ploghubapp:about' %}">
+                        About
+                    </a>
+                </div>
+                <div class="col-xs-6 col-md-2">
+                    <a href="https://twitter.com/ploggingdev">
+                        Twitter
+                    </a>
+                </div>
+            </div>
+        </div>
+        </nav>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
