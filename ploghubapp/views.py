@@ -195,6 +195,7 @@ class ViewPost(generic.DetailView):
                 post_vote_value = None
         else:
             user_votes = list()
+            post_vote_value = None
         form = self.form_class()
         return render(request, self.template_name, {'post' : post, 'nodes' : nodes, 'form' : form, 'comments_count' : len(nodes), 'user_votes' : user_votes ,'post_vote_value' : post_vote_value })
 
